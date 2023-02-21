@@ -1,4 +1,7 @@
-with import <nixpkgs> {};
+with import (fetchTarball {
+  url = "https://github.com/nixos/nixpkgs/tarball/b139b6056c8ad4ef7e0cffb81304d59cf077589b";
+  sha256 = "0sn9l19ckvdh227n0rfxk1cjnslhb5hr3g8czf3a436zkyfdl3if";
+}) {};
 
 let
   zig = stdenv.mkDerivation rec {
@@ -30,12 +33,7 @@ let
       export HOME=$TMPDIR;
     '';
 
-    cmakeFlags = [
-      # file RPATH_CHANGE could not write new RPATH
-      "-DCMAKE_SKIP_BUILD_RPATH=ON"
-    ];
-
-    doCheck = false; # YOLO
+    doCheck = false;
   };
 in
 mkShell {
