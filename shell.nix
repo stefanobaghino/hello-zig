@@ -21,6 +21,7 @@ let
     ];
 
     buildInputs = [
+      coreutils
       libxml2
       zlib
     ] ++ (with llvmPackages_15; [
@@ -33,7 +34,25 @@ let
       export HOME=$TMPDIR;
     '';
 
-    doCheck = false;
+    postPatch = ''
+      # Zig's build looks at /usr/bin/env to find dynamic linking info. This
+      # doesn't work in Nix' sandbox. Use env from our coreutils instead.
+      substituteInPlace lib/std/zig/system/NativeTargetInfo.zig --replace "/usr/bin/env" "${coreutils}/bin/env"
+    '';
+
+    cmakeFlags = [
+      # file RPATH_CHANGE could not write new RPATH
+      "-DCMAKE_SKIP_BUILD_RPATH=ON"
+
+      # ensure determinism in the compiler build
+      "-DZIG_TARGET_MCPU=baseline"
+    ];
+
+    doCheck = true;
+    installCheckPhase = ''
+      $out/bin/zig test --cache-dir "$TMPDIR" -I $src/test $src/test/behavior.zig
+    '';
+
   };
 in
 mkShell {
